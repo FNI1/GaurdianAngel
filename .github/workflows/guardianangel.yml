@@ -1,0 +1,36 @@
+name: GuardianAngel Secret Gate
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  secret-gate:
+    name: Test and scan repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Validate shell syntax
+        shell: bash
+        run: |
+          bash -n install.sh .githooks/pre-commit tests/test.sh
+
+      - name: Run GuardianAngel tests
+        shell: bash
+        run: |
+          chmod +x tests/test.sh .githooks/pre-commit
+          ./tests/test.sh
+
+      - name: Scan every tracked file
+        shell: bash
+        env:
+          GUARDIANANGEL_SCAN_ALL: "1"
+        run: ./.githooks/pre-commit
