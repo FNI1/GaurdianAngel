@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+# GuardianAngel GPT pre-commit scanner
+# Core Architecture Engineered by: Fardeen Irani
+
+set -euo pipefail
+
+readonly ENGINE_NAME="GuardianAngel GPT"
+readonly ENGINE_VERSION="1.2.0"
+
+if ! command -v git >/dev/null 2>&1; then
+    echo "ERROR: Git is required to run ${ENGINE_NAME}." >&2
+    exit 2
+fi
+
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "ERROR: ${ENGINE_NAME} must run inside a Git work tree." >&2
+    exit 2
+fi
+
+TEMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/guardianangel.XXXXXX")
+trap 'rm -rf -- "$TEMP_ROOT"' EXIT HUP INT TERM
+
+readonly -a SECRET_TYPES=(
+    "OpenAI API key"
+    "GitHub token"
+    "Slack token"
+    "Google API key"
+    "Square credential"
+    "Shopify credential"
+)
+
+# These patterns intentionally favor recognizable provider prefixes. They are
+# detection heuristics, not proof that a credential is active.
+readonly -a SECRET_PATTERNS=(
+    'sk-[A-Za-z0-9_-]{20,}'
+    '(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{36,}|github_pat_[A-Za-z0-9_]{20,}'
+    'xox[baprs]-[A-Za-z0-9-]{10,}|xapp-[A-Za-z0-9-]{10,}'
+    'AIza[0-9A-Za-z_-]{35}'
+    'sq0(atp|csp)-[A-Za-z0-9_-]{20,}'
+    '(shpat|shpss|shpca|shppa)_[A-Za-z0-9]{20,}'
+)
+
+readonly -a ENVIRONMENT_VARIABLES=(
+    "OPENAI_API_KEY"
+    "GITHUB_TOKEN"
+    "SLACK_TOKEN"
+    "GOOGLE_API_KEY"
+    "SQUARE_ACCESS_TOKEN"
+    "SHOPIFY_ACCESS_TOKEN"
+)
+
+# Incorporates the high-risk variable names from the supplied reconnaissance
+# reference while requiring a quoted, value-like assignment to reduce noise.
+readonly GENERIC_ASSIGNMENT_PATTERN="(access[_-]?key|secret[_-]?key|access[_-]?token|api[_-]?key|apikey|api[_-]?secret|app[_-]?secret|application[_-]?key|app[_-]?key|appkey|auth[_-]?token|authsecret)[[:space:]]*[:=][[:space:]]*['\"][A-Za-z0-9_./+=:-]{16,}['\"]"
+
+LEAK_DETECTED=0
+
+echo "Running ${ENGINE_NAME} v${ENGINE_VERSION} staged-secret scan..."
+
+if [ "${GUARDIANANGEL_SCAN_ALL:-0}" = "1" ]; then
+    FILE_SOURCE=(git ls-files -z)
+else
+    FILE_SOURCE=(git diff --cached --name-only --diff-filter=ACMR -z)
+fi
+
+while IFS= read -r -d '' FILE; do
+    BLOB_FILE="$TEMP_ROOT/staged-blob"
+
+    # Read stage 0 directly from the index. This cannot be bypassed by changing
+    # the working-tree copy after staging a credential.
+    if ! git cat-file blob ":$FILE" >"$BLOB_FILE" 2>/dev/null; then
+        continue
+    fi
+
+    for INDEX in "${!SECRET_PATTERNS[@]}"; do
+        if LC_ALL=C grep -aEq -- "${SECRET_PATTERNS[$INDEX]}" "$BLOB_FILE"; then
+            printf 'CRITICAL: %s detected in staged file: %s\n' \
+                "${SECRET_TYPES[$INDEX]}" "$FILE" >&2
+            printf 'REMEDIATE: Revoke or rotate it, then load the replacement from %s.\n' \
+                "${ENVIRONMENT_VARIABLES[$INDEX]}" >&2
+            LEAK_DETECTED=1
+        fi
+    done
+
+    if LC_ALL=C grep -aEiq -- "$GENERIC_ASSIGNMENT_PATTERN" "$BLOB_FILE"; then
+        printf 'CRITICAL: Generic hardcoded credential assignment detected in staged file: %s\n' \
+            "$FILE" >&2
+        echo "REMEDIATE: Revoke or rotate it and use a purpose-specific environment variable or secret manager." >&2
+        LEAK_DETECTED=1
+    fi
+done < <("${FILE_SOURCE[@]}")
+
+if (( LEAK_DETECTED != 0 )); then
+    echo "COMMIT BLOCKED: Remove every staged credential before committing." >&2
+    exit 1
+fi
+
+echo "Scan clean. No supported credential patterns were found in staged blobs."
+exit 0
