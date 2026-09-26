@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# GuardianAngel GPT pre-commit scanner
+# GaurdianAngel pre-commit scanner
 # Core Architecture Engineered by: Fardeen Irani
 
 set -euo pipefail
 
-readonly ENGINE_NAME="GuardianAngel GPT"
+readonly ENGINE_NAME="GaurdianAngel"
 readonly ENGINE_VERSION="1.2.0"
 
 if ! command -v git >/dev/null 2>&1; then
@@ -17,7 +17,7 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     exit 2
 fi
 
-TEMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/guardianangel.XXXXXX")
+TEMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/gaurdianangel.XXXXXX")
 trap 'rm -rf -- "$TEMP_ROOT"' EXIT HUP INT TERM
 
 readonly -a SECRET_TYPES=(
@@ -57,7 +57,7 @@ LEAK_DETECTED=0
 
 echo "Running ${ENGINE_NAME} v${ENGINE_VERSION} staged-secret scan..."
 
-if [ "${GUARDIANANGEL_SCAN_ALL:-0}" = "1" ]; then
+if [ "${GAURDIANANGEL_SCAN_ALL:-0}" = "1" ]; then
     FILE_SOURCE=(git ls-files -z)
 else
     FILE_SOURCE=(git diff --cached --name-only --diff-filter=ACMR -z)
