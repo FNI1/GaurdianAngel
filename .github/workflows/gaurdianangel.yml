@@ -1,4 +1,4 @@
-name: GuardianAngel Secret Gate
+name: GaurdianAngel Secret Gate
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
         run: |
           bash -n install.sh .githooks/pre-commit tests/test.sh
 
-      - name: Run GuardianAngel tests
+      - name: Run GaurdianAngel tests
         shell: bash
         run: |
           chmod +x tests/test.sh .githooks/pre-commit
@@ -32,5 +32,5 @@ jobs:
       - name: Scan every tracked file
         shell: bash
         env:
-          GUARDIANANGEL_SCAN_ALL: "1"
+          GAURDIANANGEL_SCAN_ALL: "1"
         run: ./.githooks/pre-commit
