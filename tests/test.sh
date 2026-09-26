@@ -4,14 +4,14 @@ set -euo pipefail
 
 SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 HOOK_PATH="$SCRIPT_DIR/../.githooks/pre-commit"
-TEST_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/guardianangel-test.XXXXXX")
+TEST_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/gaurdianangel-test.XXXXXX")
 trap 'rm -rf -- "$TEST_ROOT"' EXIT HUP INT TERM
 
 REPOSITORY="$TEST_ROOT/repository"
 mkdir -p "$REPOSITORY"
 git -C "$REPOSITORY" init -q
-git -C "$REPOSITORY" config user.name "GuardianAngel Test"
-git -C "$REPOSITORY" config user.email "guardianangel@example.invalid"
+git -C "$REPOSITORY" config user.name "GaurdianAngel Test"
+git -C "$REPOSITORY" config user.email "gaurdianangel@example.invalid"
 
 fail() {
     echo "FAIL: $*" >&2
@@ -52,7 +52,7 @@ git -C "$REPOSITORY" add clean.js
 assert_clean
 git -C "$REPOSITORY" commit -qm "clean baseline"
 
-if ! output=$(cd "$REPOSITORY" && GUARDIANANGEL_SCAN_ALL=1 "$HOOK_PATH" 2>&1); then
+if ! output=$(cd "$REPOSITORY" && GAURDIANANGEL_SCAN_ALL=1 "$HOOK_PATH" 2>&1); then
     printf '%s\n' "$output" >&2
     fail "clean full-repository scan was blocked"
 fi
@@ -81,4 +81,4 @@ if [[ "$output" == *"$STAGED_ONLY"* ]]; then
     fail "staged-only credential was echoed in scanner output"
 fi
 
-echo "PASS: GuardianAngel pre-commit tests completed successfully."
+echo "PASS: GaurdianAngel pre-commit tests completed successfully."
