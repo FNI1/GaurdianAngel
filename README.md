@@ -1,6 +1,6 @@
-# GuardianAngel GPT v1.2.0
+# GaurdianAngel v1.2.0
 
-GuardianAngel GPT is a repository-local pre-commit scanner that blocks supported hardcoded credentials before they enter Git history. It inspects the exact staged blobs and never sends source code or detected values over the network.
+GaurdianAngel is a repository-local pre-commit scanner that blocks supported hardcoded credentials before they enter Git history. It inspects the exact staged blobs and never sends source code or detected values over the network.
 
 ## Supported detections
 
@@ -21,8 +21,8 @@ The provider list and common variable names incorporate the supplied `GitHub-Lea
 From the target repository root:
 
 ```bash
-chmod +x /path/to/GuardianAngel-GPT-v1.2.0/install.sh
-/path/to/GuardianAngel-GPT-v1.2.0/install.sh
+chmod +x /path/to/GaurdianAngel-v1.2.0/install.sh
+/path/to/GaurdianAngel-v1.2.0/install.sh
 ```
 
 The installer uses repository-local `core.hooksPath=.githooks`. It refuses to overwrite or bypass an existing pre-commit hook.
@@ -43,7 +43,7 @@ The included GitHub Actions workflow runs the automated tests and scans every tr
 To perform the same full-repository scan locally:
 
 ```bash
-GUARDIANANGEL_SCAN_ALL=1 .githooks/pre-commit
+GAURDIANANGEL_SCAN_ALL=1 .githooks/pre-commit
 ```
 
 ## Remediation workflow
