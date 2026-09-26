@@ -12,4 +12,4 @@ Do not open a public issue containing a credential, private token, source file, 
 4. Review provider audit logs and usage for unauthorized activity.
 5. If the value entered Git history, treat it as compromised even after history is rewritten.
 
-GuardianAngel reports filenames and credential classes only. It must never print, store, or transmit matched values.
+GaurdianAngel reports filenames and credential classes only. It must never print, store, or transmit matched values.
